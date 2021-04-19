@@ -2,12 +2,17 @@ import {
   Avatar,
   Box,
   Button,
+  Card,
   Chip,
   Divider,
   Grid,
   Paper,
   Typography,
 } from "@material-ui/core";
+import CardActionArea from "@material-ui/core/CardActionArea";
+import CardActions from "@material-ui/core/CardActions";
+import CardContent from "@material-ui/core/CardContent";
+import { useRouter } from 'next/router'
 import { Container } from "next/app";
 import dynamic from "next/dynamic";
 import { makeStyles } from "@material-ui/core/styles";
@@ -15,6 +20,7 @@ import Image from "next/image";
 import AccessTimeIcon from "@material-ui/icons/AccessTime";
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import PersonIcon from "@material-ui/icons/Person";
+import { fetchMovies } from "../api/movies"
 
 const useStyles = makeStyles((theme) => ({
   poster: {
@@ -41,19 +47,20 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export const getStaticPaths = async () => {
-  const res = await fetch("http://localhost:3000/api/movies");
-  const data = await res.json();
-
+export const getStaticPaths = async (req) => {
+  
+  const res = await fetchMovies();
+  const data = await res;
+  
   // map data to an array of path objects with params (id)
-  const { results } = data.data || {};
+  // const { results = {}} = data;
   // console.log("results == ?", results);
-  const paths = results.map((ninja) => {
+  const paths = data && data.results.map((ninja) => {
     return {
       params: { id: ninja.id.toString() },
     };
   });
-
+  console.log("data == >", paths);
   return {
     paths,
     fallback: false,
@@ -75,17 +82,9 @@ export const getStaticProps = async (context) => {
 const SimilerMovies = dynamic(() => import("./similerMovies.js"));
 // co
 const moviesDetails = ({ movDetails, movId }) => {
+  const router = useRouter()
   // console.log("movDetails == ", movDetails);
   const classes = useStyles();
-
-  const defaultProps = {
-    boxSizing: "border-box",
-    bgcolor: "#263238",
-    borderColor: "#263238",
-    m: 1,
-    border: 1,
-    style: { width: "3rem", height: "3rem" },
-  };
   const GetGenres = () => {
     const { genres } = movDetails;
     return genres.map((genre) => {
@@ -101,37 +100,42 @@ const moviesDetails = ({ movDetails, movId }) => {
     const { credits } = movDetails;
     const arrCast = credits.cast.splice(0, 10);
     return arrCast.map((genre) => {
-      // console.log(genre.name);
       return (
-        <Avatar
-          key={genre.character}
-          alt={genre.character}
-          src={`https://image.tmdb.org/t/p/w235_and_h235_face${genre.profile_path}`}
-          className={classes.large}
-        />
+        <Grid item xs={12} sm={12} md={12} lg={12}>
+          <Card className={classes.root}>
+            <CardActionArea>
+              <Image
+                src={`/t/p/w235_and_h235_face${genre.profile_path}`}
+                alt={genre.character}
+                width={150}
+                height={150}
+                layout="responsive"
+              />
+              <CardContent>
+                <Typography gutterBottom variant="body1">
+                  {genre.character}
+                </Typography>
+              </CardContent>
+          </CardActionArea>
+        </Card>
+      </Grid>
       );
     });
   };
 
   return (
-    <Container maxWidth="lg">
-      <Box component="div" m={1}>
         <Grid container spacing={2}>
-          <Grid
-            item
-            xs={12}
+          <Grid item xs={12}
             style={{
               backgroundImage: `linear-gradient(to right, rgba(6.27%, 7.84%, 9.02%, 1.00) 150px, rgba(6.27%, 7.84%, 9.02%, 0.84) 100%), url(
                 https://image.tmdb.org/t/p/w500/${movDetails.backdrop_path}
               )`,
               backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-              height: 350,
-              width: 100,
+              backgroundSize: "cover",  
               display: "flex",
             }}
           >
-            <Grid item lg={4} sm={12}>
+            <Grid item xs={12} sm={12} md={4} lg={4}>
               <Image
                 src={`/t/p/w500/${movDetails.poster_path}`}
                 alt={movDetails.original_title}
@@ -139,46 +143,37 @@ const moviesDetails = ({ movDetails, movId }) => {
                 height={320}
               />
             </Grid>
-            <Grid item lg={8} sm={12} className={classes.poster}>
+            <Grid item xs={12} sm={12} md={8} lg={8} className={classes.poster}>
               <Typography variant="h5" component="h5">
                 {movDetails.original_title}
               </Typography>
-
-              <Grid container spacing={3}>
-                <Grid item>
+                <Grid item xs={3} sm={3} md={12} lg={12}>
                   <Chip
                     icon={<AccessTimeIcon />}
                     label="2.3 Min"
                     color="secondary"
                   />
-                </Grid>
-                <Grid item>
                   <Chip
                     icon={<FavoriteIcon />}
                     label={movDetails.vote_average}
                     color="secondary"
                   />
-                </Grid>
-                <Grid item>
                   <Chip
                     icon={<PersonIcon />}
                     label={movDetails.vote_count}
                     color="secondary"
                   />
                 </Grid>
-              </Grid>
-              <Grid item>
                 <Box className={classes.root}>
                   <GetGenres />
                 </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="h6" component="h6">
-                  About the movie
-                </Typography>
+                <Box>
+                  <Typography variant="h6" component="h6">
+                    About the movie
+                  </Typography>
 
-                <Typography component="p">{movDetails.overview}</Typography>
-              </Grid>
+                  <Typography component="p">{movDetails.overview}</Typography>
+                </Box>
             </Grid>
           </Grid>
           <Grid item xs={12} sm={6} md={3} lg={12}>
@@ -194,8 +189,6 @@ const moviesDetails = ({ movDetails, movId }) => {
           <Divider className={classes.hr} variant="middle" />
           <SimilerMovies simMoviesIDS={movId} />
         </Grid>
-      </Box>
-    </Container>
   );
 };
 

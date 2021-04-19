@@ -27,7 +27,7 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 5,
   },
   cardInner: {
-    width: "calc(100vw - 16px)",
+    width: "calc(90vw - 16px)",
     display: "flex",
     overflowX: "scroll",
     overflowY: "hidden",

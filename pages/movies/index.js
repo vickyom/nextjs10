@@ -1,25 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { makeStyles } from "@material-ui/core/styles";
-import { useDispatch, useSelector } from "react-redux";
-import { loadMovs } from "../../store/action/movies/movActionsCreator";
 import Card from "@material-ui/core/Card";
 import CardActionArea from "@material-ui/core/CardActionArea";
 import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
-import CardMedia from "@material-ui/core/CardMedia";
-import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import { Box, Grid } from "@material-ui/core";
 import Skeleton from "@material-ui/lab/Skeleton";
-import store from "../../store/store";
 import LinearProgress from "@material-ui/core/LinearProgress";
+import { fetchMovies } from "../api/movies"
 
 export const getStaticProps = async () => {
-  const res = await fetch("http://localhost:3000/api/movies");
-  const data = await res.json();
+  const res = await fetchMovies();
+  const data = await res;
   return {
     props: { movies: data },
   };
@@ -50,6 +46,10 @@ const useStyles = makeStyles({
     textAlign: "center",
   },
 });
+const myLoader = () => {
+  console.log('- - - myLoader - - -')
+  return `https://image.tmdb.org/t/p/w500//7prYzufdIOy1KCTZKVWpjBFqqNr.jpg?auto=format&fit=max&w=1080`
+}
 
 const movies = ({ movies, loading = true }) => {
   const classes = useStyles();
@@ -72,7 +72,6 @@ const movies = ({ movies, loading = true }) => {
   //     dispatch(loadMovs());
   //   }, []);
   const redirect = (movieID) => {
-    debugger;
     console.log(movieID);
     router.push(`/movies/${movieID}`);
   };
@@ -90,8 +89,8 @@ const movies = ({ movies, loading = true }) => {
           justify="flex-start"
           alignItems="flex-start"
         >
-          {movies && movies.data.results ? (
-            movies.data.results.map((movie) => (
+          {movies && movies.results ? (
+            movies.results.map((movie) => (
               <Grid item xs={12} sm={6} md={3} key={movie.id}>
                 <Card className={classes.root}>
                   <CardActionArea>
@@ -100,6 +99,7 @@ const movies = ({ movies, loading = true }) => {
                       alt={movie.original_title}
                       width={350}
                       height={200}
+                      loader={myLoader}
                     />
                     <CardContent>
                       <Typography
